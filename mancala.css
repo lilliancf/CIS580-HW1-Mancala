@@ -1,3 +1,9 @@
+/*
+Lillian Fulton
+CIS580 HM1
+CSS file for Mancala game
+*/
+
 #board {
 	position: relative;
 	border: 4px solid #994d00;

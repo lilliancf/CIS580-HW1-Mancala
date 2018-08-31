@@ -1,12 +1,51 @@
+/*
+Lillian Fulton
+CIS580 HM1
+Javascript file for Mancala game
+*/
 
 var turn = 0;
-
 var board = [null,null];
-
 var icons = [];
-
 var ongoingGame = false;
 
+//startup fuctions start
+// loads html strings for displaying each icon into an array
+function loadIcons() {
+  for (var i = 0; i < 106; i++) {
+    icons[i] = '<img src="icons/' + i + '.png" class="icon"></img>';
+  }
+}
+
+// generates the 3 dimensional array used to store the board info
+function makeBoardArr(){
+  for (var p = 0; p < 2; p++) {
+    board[p] = [];
+    for(var c = 0; c < 7; c++) {
+      board[p][c] = [];
+    }
+  }
+}
+
+// attaches click events to the cups and the button
+function initClickEvents() {
+  for (var p = 0; p < 2; p++) {
+  const player = p;
+    for (var c = 0; c < 7; c++) {
+      const col = c;
+      document.getElementById('col-p' + player + '-' + col).addEventListener('click', function(event){
+        event.preventDefault();
+        cupClick(player, col);
+      });
+    }
+  }
+  document.getElementById('button').addEventListener('click', function(event){
+    event.preventDefault();
+    buttonClick();
+  });
+}
+
+// resets the board for a new game
 function initGame() {
   ongoingGame = true;
   turn = 0;
@@ -22,11 +61,104 @@ function initGame() {
   }
   updateBoard();
 }
+// startup functions end
 
+//click events start
+
+// resets the board when the New Game button is clicked
 function buttonClick() {
   initGame();
 }
 
+/*
+When a cup is clicked, checks to see if it was a valid move and if so, moves the game pieces.
+It then checks to see if the game is over, and if so, moves the pieces appropriately,
+displays the winner and changes the ongoing game state to false.
+If the game is not over, it changes who's turn it is and updates the ui
+In either case, it then updates the board
+*/
+function cupClick(p, c) {
+  if (ongoingGame) {
+    if (validClick(p, c)) {
+      movePieces(p, c);
+      if (checkIfGameOver()) {
+        moveGameOverPieces();
+        updateWinner();
+        ongoingGame = false;
+      }
+      else {
+        turn = (turn+1)%2;
+        updateTurn();
+      }
+      updateBoard();
+    }
+  }
+}
+//click events end
+
+// ui update funtions start
+// prints a message to the ui portion of the page
+function displayMessage(message) {
+    document.getElementById('ui').innerHTML = message;
+}
+
+// checks who's turn it is and updates the ui accordingly
+function updateTurn() {
+  if (turn===0)  displayMessage("Blue's Turn");
+  else displayMessage("Red's Turn");
+}
+
+// checks to see which emoji are stored in each cup and displays the corrosponding image appropriately
+function updateBoard() {
+  for (var p = 0; p < 2; p++) {
+    for (var c = 0; c < 7; c++) {
+      var box = "";
+      for (var i = 1; i < (board[p][c][0]+1); i++) {
+        box += icons[board[p][c][i]];
+      }
+      document.getElementById('col-p' + p + '-' + c).innerHTML = box;
+      document.getElementById('numCol-p' + p + '-' + c).innerHTML = board[p][c][0];
+    }
+  }
+}
+
+// checks to see who is winning and updates the ui accordingly
+function updateWinner() {
+  if(board[0][6][0] > board [1][6][0]) {
+    displayMessage("Blue Wins! Press New Game to Play Again!");
+  }
+  else if (board[0][6][0] === board [1][6][0]){
+    displayMessage("Tie! Press New Game to Play Again!");
+  }
+  else {
+      displayMessage("Red Wins! Press New Game to Play Again!");
+  }
+}
+
+// checks to see if the user made a valid move; if not, displays an error message in the ui
+function validClick(p, c) {
+  if (p != turn) {
+    displayMessage("Invalid Move - you can only move the emoji in your own cups");
+    setTimeout(updateTurn, 2000);
+    return false;
+  }
+   else if (c === 6) {
+    displayMessage("Invalid Move - you can't move emoji out of the score cup");
+    setTimeout(updateTurn, 2000);
+    return false;
+  }
+  else if (board[p][c][0]===0) {
+    displayMessage("Invalid Move - you can't make a move on an empty cup");
+    setTimeout(updateTurn, 2000);
+    return false;
+  }
+  return true;
+}
+// ui update functions end
+
+//game logic start
+
+// moves the peices appropriately, and also handles the go again and capture mechanics
 function movePieces(p, c) {
   var iStack = [];
   var num = board[p][c][0];
@@ -86,6 +218,7 @@ function movePieces(p, c) {
   }
 }
 
+// checks to see if the current player's cups are all empty, in which case the game ends
 function checkIfGameOver() {
   var end = true;
   for (var c = 0; c < 6; c++) {
@@ -96,6 +229,7 @@ function checkIfGameOver() {
     return end;
 }
 
+// handles moving all the remaing pieces into that player's score cup
 function moveGameOverPieces() {
   var winStack = [];
   for (var oc = 0; oc < 6; oc++) {
@@ -106,7 +240,6 @@ function moveGameOverPieces() {
     board[(turn+1)%2][oc][0] = 0;
   }
 
-
   var curScore = board[(turn+1)%2][6][0];
 
   for(var pp = curScore+1; winStack.length>0; pp++) {
@@ -114,116 +247,8 @@ function moveGameOverPieces() {
     board[(turn+1)%2][6][0]++;
   }
 }
-
-
-function cupClick(p, c) {
-  if (ongoingGame) {
-    if (validClick(p, c)) {
-      movePieces(p, c);
-      if (checkIfGameOver()) {
-        moveGameOverPieces();
-        updateWinner();
-        ongoingGame = false;
-      }
-      else {
-        turn = (turn+1)%2;
-        updateTurn();
-      }
-      updateBoard();
-    }
-  }
-}
-
-//startup fuctions start
-function loadIcons() {
-  for (var i = 0; i < 106; i++) {
-    icons[i] = '<img src="icons/' + i + '.png" class="icon"></img>';
-  }
-}
-
-function makeBoardArr(){
-  for (var p = 0; p < 2; p++) {
-    board[p] = [];
-    for(var c = 0; c < 7; c++) {
-      board[p][c] = [];
-    }
-  }
-}
-
-function initClickEvents() {
-  for (var p = 0; p < 2; p++) {
-  const player = p;
-    for (var c = 0; c < 7; c++) {
-      const col = c;
-      document.getElementById('col-p' + player + '-' + col).addEventListener('click', function(event){
-        event.preventDefault();
-        cupClick(player, col);
-      });
-    }
-  }
-  document.getElementById('button').addEventListener('click', function(event){
-    event.preventDefault();
-    buttonClick();
-  });
-}
-// startup functions end
-
-// ui update funtions start
-function displayMessage(message) {
-    document.getElementById('ui').innerHTML = message;
-}
-
-function updateTurn() {
-  if (turn===0)  displayMessage("Blue's Turn");
-  else displayMessage("Red's Turn");
-}
-
-function updateBoard() {
-  for (var p = 0; p < 2; p++) {
-    for (var c = 0; c < 7; c++) {
-      var box = "";
-      for (var i = 1; i < (board[p][c][0]+1); i++) {
-        box += icons[board[p][c][i]];
-      }
-      document.getElementById('col-p' + p + '-' + c).innerHTML = box;
-      document.getElementById('numCol-p' + p + '-' + c).innerHTML = board[p][c][0];
-    }
-  }
-}
-
-function updateWinner() {
-  if(board[0][6][0] > board [1][6][0]) {
-    displayMessage("Blue Wins! Press New Game to Play Again!");
-  }
-  else if (board[0][6][0] === board [1][6][0]){
-    displayMessage("Tie! Press New Game to Play Again!");
-  }
-  else {
-      displayMessage("Red Wins! Press New Game to Play Again!");
-  }
-}
-
-function validClick(p, c) {
-  if (p != turn) {
-    displayMessage("Invalid Move - you can only move the emoji in your own cups");
-    setTimeout(updateTurn, 2000);
-    return false;
-  }
-   else if (c === 6) {
-    displayMessage("Invalid Move - you can't move emoji out of the score cup");
-    setTimeout(updateTurn, 2000);
-    return false;
-  }
-  else if (board[p][c][0]===0) {
-    displayMessage("Invalid Move - you can't make a move on an empty cup");
-    setTimeout(updateTurn, 2000);
-    return false;
-  }
-  return true;
-}
-// ui update functions end
+//game logic endS
 
 loadIcons();
 makeBoardArr();
 initClickEvents();
-//initGame();
