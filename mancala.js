@@ -59,6 +59,7 @@ function initGame() {
     }
     board[p][6][0] = 0;
   }
+
   updateBoard();
 }
 // startup functions end
@@ -221,31 +222,38 @@ function movePieces(p, c) {
 // checks to see if the current player's cups are all empty, in which case the game ends
 function checkIfGameOver() {
   var end = true;
-  for (var c = 0; c < 6; c++) {
-      if(board[turn][c][0]>0) {
-        end = false;
+  for (var p = 0; p < 2; p++) {
+    for (var c = 0; c < 6; c++) {
+        if(board[p][c][0]>0) {
+          end = false;
+        }
       }
-    }
-    return end;
+    if (end) return end;
+    if (p===0) end = true;
+  }
+  return end;
 }
 
 // handles moving all the remaing pieces into that player's score cup
 function moveGameOverPieces() {
-  var winStack = [];
-  for (var oc = 0; oc < 6; oc++) {
-    for (var i = 1; i < board[(turn+1)%2][oc][0]+1; i++) {
-      winStack.push(board[(turn+1)%2][oc][i]);
-      board[(turn+1)%2][oc][i] = null;
+  for (var p = 0; p < 2; p++) {
+    var winStack = [];
+    for (var oc = 0; oc < 6; oc++) {
+      for (var i = 1; i < board[p][oc][0]+1; i++) {
+        winStack.push(board[p][oc][i]);
+        board[p][oc][i] = null;
+      }
+      board[p][oc][0] = 0;
     }
-    board[(turn+1)%2][oc][0] = 0;
+
+    var curScore = board[p][6][0];
+
+    for(var pp = curScore+1; winStack.length>0; pp++) {
+      board[p][6][pp] = winStack.pop();
+      board[p][6][0]++;
+    }
   }
 
-  var curScore = board[(turn+1)%2][6][0];
-
-  for(var pp = curScore+1; winStack.length>0; pp++) {
-    board[(turn+1)%2][6][pp] = winStack.pop();
-    board[(turn+1)%2][6][0]++;
-  }
 }
 //game logic endS
 
